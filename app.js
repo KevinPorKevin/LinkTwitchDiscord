@@ -51,7 +51,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        mostrarEstado("Conectando con el servidor...");
+        mostrarEstado("Conectando con el servidor para asignar el rol...");
 
         try {
             const response = await fetch(`${URL_DE_TU_RENDER}/api/vincular`, {
@@ -64,14 +64,18 @@ window.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('webhook_enviado', 'true');
                 window.location.reload(); 
             } else {
-                mostrarEstado("Error al otorgar el rol. Reintenta.");
+                mostrarEstado("Error al otorgar el rol. Por favor, pulsa reiniciar e inténtalo de nuevo.");
             }
         } catch (e) {
-            mostrarEstado("Error de conexión. Pulsa reiniciar.");
+            mostrarEstado("Error de conexión con el servidor. Pulsa reiniciar.");
         }
     } 
+    // --- ESTA ES LA PARTE QUE HEMOS MEJORADO ---
     else if (twitchToken || discordToken) {
+        // Determinamos qué hay conectado y qué falta de forma explícita
+        const conectado = twitchToken ? "Twitch" : "Discord";
         const falta = twitchToken ? "Discord" : "Twitch";
-        mostrarEstado(`Has conectado una cuenta. Ahora falta conectar ${falta}.`);
+        
+        mostrarEstado(`Has conectado correctamente <b>${conectado}</b>.<br>Ahora falta conectar tu cuenta de <b>${falta}</b>.`);
     }
 });
