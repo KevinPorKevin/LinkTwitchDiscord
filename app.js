@@ -1,39 +1,104 @@
-// --- CONFIGURACIÓN ---
+// --- CONFIGURACIÓN (REVISA ESTOS DATOS) ---
 const TWITCH_CLIENT_ID = 'etegextzabxktszzfsxxfxob6kmqv4';
 const DISCORD_CLIENT_ID = '1030917054150213755';
 
-// ⚠️ SUSTITUYE esto por tu enlace real de Render (sin barra al final)
+// ⚠️ PON AQUÍ TU URL REAL DE RENDER (IMPORTANTE: sin / al final)
 const URL_DE_TU_RENDER = 'https://backend-vinculacion-8twr.onrender.com';
 
-// Genera la URL de redirección automáticamente según dónde esté alojada la web
 const REDIRECT_URI = encodeURIComponent(window.location.origin + window.location.pathname); 
 
-// --- ELEMENTOS DE LA INTERFAZ ---
 const btnTwitch = document.getElementById('btn-twitch');
 const btnDiscord = document.getElementById('btn-discord');
 const statusDiv = document.getElementById('status-message');
 
-// --- BOTONES DE LOGIN ---
+// --- BOTONES ---
 btnTwitch.addEventListener('click', () => {
-    const twitchAuthUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=user:read:email&state=twitch`;
-    window.location.href = twitchAuthUrl;
+    window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=user:read:email&state=twitch`;
 });
 
 btnDiscord.addEventListener('click', () => {
-    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=identify&state=discord`;
-    window.location.href = discordAuthUrl;
+    window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=identify&state=discord`;
 });
 
-// --- FUNCIÓN PARA MOSTRAR MENSAJES ---
+// --- MOSTRAR MENSAJES ---
 function mostrarEstado(mensaje, tipo = 'info') {
     statusDiv.style.display = 'block';
+    statusDiv.className = tipo === 'exito' ? 'success' : (tipo === 'error' ? 'error' : '');
     
-    if (tipo === 'exito') {
-        statusDiv.classList.add('success');
-        statusDiv.style.border = '1px solid #2ecc71';
-        statusDiv.style.backgroundColor = 'rgba(46, 204, 113, 0.1)';
-    } else {
-        statusDiv.classList.remove('success');
+    statusDiv.innerHTML = `
+        <div style="margin-bottom: 12px;">${mensaje}</div>
+        <button id="btn-reset" style="background:none; border:1px solid #777; color:#aaa; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; width:100%;">
+            Reiniciar proceso
+        </button>
+    `;
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+        localStorage.clear();
+        window.location.href = window.location.origin + window.location.pathname;
+    });
+}
+
+// --- LÓGICA PRINCIPAL ---
+window.addEventListener('DOMContentLoaded', async () => {
+    // 1. Detectar si volvemos de una redirección con token
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const accessToken = params.get('access_token');
+    const state = params.get('state');
+
+    if (accessToken && state) {
+        // Guardamos el token recibido
+        localStorage.setItem(`${state}_token`, accessToken);
+        
+        // EL "SALTO LIMPIO": Recargamos la URL sin el hash para resetear el zoom del móvil
+        window.location.href = window.location.origin + window.location.pathname;
+        return; // Detenemos la ejecución porque la página va a recargar
+    }
+
+    // 2. Comprobar tokens guardados en memoria
+    const twitchToken = localStorage.getItem('twitch_token');
+    const discordToken = localStorage.getItem('discord_token');
+
+    // Actualizar botones visualmente
+    if (twitchToken) { btnTwitch.innerHTML = 'Twitch Conectado ✓'; btnTwitch.disabled = true; }
+    if (discordToken) { btnDiscord.innerHTML = 'Discord Conectado ✓'; btnDiscord.disabled = true; }
+
+    // 3. Si tenemos ambos, enviamos al servidor
+    if (twitchToken && discordToken) {
+        if (localStorage.getItem('webhook_enviado') === 'true') {
+            mostrarEstado("¡Tus cuentas ya están vinculadas!", "exito");
+            return;
+        }
+
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = 'Finalizando vinculación en el servidor...';
+        
+        try {
+            const response = await fetch(`${URL_DE_TU_RENDER}/api/vincular`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ twitchToken, discordToken })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                localStorage.setItem('webhook_enviado', 'true');
+                mostrarEstado("¡Vinculación y rol completados con éxito!", "exito");
+            } else if (result.error === 'not_in_server') {
+                mostrarEstado("Error: Debes unirte al servidor de Discord primero.", "error");
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            mostrarEstado("Error de conexión. Asegúrate de que el servidor está activo.", "error");
+        }
+    } 
+    else if (twitchToken || discordToken) {
+        const falta = !twitchToken ? "Twitch" : "Discord";
+        mostrarEstado(`Has conectado una cuenta. Ahora falta conectar ${falta}.`);
+    }
+});
         statusDiv.style.border = '1px solid #e74c3c';
         statusDiv.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
     }
