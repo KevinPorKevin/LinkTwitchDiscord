@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vincula tus cuentas | Twitch & Discord</title>
     <style>
+/* Asegúrate de que el cuerpo no permita desbordamientos */
+body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%; /* Evita cambios de tamaño de texto en iOS */
+}
+
+/* Ajusta tu clase de contenedor (la caja gris) */
+.container { 
+    width: 90%;          /* Ocupa casi todo el ancho en móviles */
+    max-width: 400px;    /* Pero no más de 400px en PC */
+    margin: 20px auto;   /* Centrado */
+    box-sizing: border-box; 
+}
+        
+        
         :root {
             --twitch-color: #9146FF;
             --twitch-hover: #772ce8;
