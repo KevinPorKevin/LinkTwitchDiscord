@@ -1,4 +1,3 @@
-// --- CONFIGURACIÓN ---
 const TWITCH_CLIENT_ID = 'etegextzabxktszzfsxxfxob6kmqv4';
 const DISCORD_CLIENT_ID = '1030917054150213755';
 const URL_DE_TU_RENDER = 'https://backend-vinculacion-8twr.onrender.com';
@@ -9,32 +8,24 @@ const btnTwitch = document.getElementById('btn-twitch');
 const btnDiscord = document.getElementById('btn-discord');
 const statusDiv = document.getElementById('status-message');
 
-// --- EVENTOS ---
-btnTwitch.addEventListener('click', () => {
-    window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=user:read:email&state=twitch`;
-});
+// --- BOTONES ---
+btnTwitch.onclick = () => window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=user:read:email&state=twitch`;
+btnDiscord.onclick = () => window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=identify&state=discord`;
 
-btnDiscord.addEventListener('click', () => {
-    window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=identify&state=discord`;
-});
-
-// --- FUNCIÓN PARA MOSTRAR MENSAJES Y EL BOTÓN ROJO ---
-function mostrarEstado(mensaje, tipo = 'info') {
+// --- FUNCIÓN ÚNICA PARA MENSAJES ---
+function mostrarEstado(mensaje, tipo = '') {
     statusDiv.style.display = 'block';
-    statusDiv.className = tipo === 'exito' ? 'success' : '';
+    statusDiv.className = tipo; // 'success' o vacío
     
-    // Aquí definimos el HTML del mensaje y el botón de reiniciar
     statusDiv.innerHTML = `
-        <div style="margin-bottom: 15px; font-weight: 500;">${mensaje}</div>
-        <button id="btn-reiniciar" style="background-color: #e74c3c; color: white; border: none; padding: 10px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: bold; font-size: 14px;">
-            Reiniciar proceso
-        </button>
+        <div class="msg-text">${mensaje}</div>
+        <button class="btn-reset" onclick="resetearTodo()">Reiniciar proceso</button>
     `;
+}
 
-    document.getElementById('btn-reiniciar').addEventListener('click', () => {
-        localStorage.clear();
-        window.location.href = window.location.origin + window.location.pathname;
-    });
+function resetearTodo() {
+    localStorage.clear();
+    window.location.href = window.location.origin + window.location.pathname;
 }
 
 // --- LÓGICA PRINCIPAL ---
@@ -46,7 +37,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     if (accessToken && state) {
         localStorage.setItem(`${state}_token`, accessToken);
-        // El "salto limpio" para el zoom
         setTimeout(() => {
             window.location.href = window.location.origin + window.location.pathname;
         }, 100); 
@@ -56,19 +46,17 @@ window.addEventListener('DOMContentLoaded', async () => {
     const twitchToken = localStorage.getItem('twitch_token');
     const discordToken = localStorage.getItem('discord_token');
 
-    // Actualizar botones
-    if (twitchToken) { btnTwitch.innerHTML = 'Twitch Conectado ✓'; btnTwitch.disabled = true; btnTwitch.style.opacity = '0.6'; }
-    if (discordToken) { btnDiscord.innerHTML = 'Discord Conectado ✓'; btnDiscord.disabled = true; btnDiscord.style.opacity = '0.6'; }
+    if (twitchToken) { btnTwitch.innerHTML = 'Twitch Conectado ✓'; btnTwitch.disabled = true; }
+    if (discordToken) { btnDiscord.innerHTML = 'Discord Conectado ✓'; btnDiscord.disabled = true; }
 
-    // CASO A: Ambas cuentas conectadas
     if (twitchToken && discordToken) {
         if (localStorage.getItem('webhook_enviado') === 'true') {
-            mostrarEstado("¡Tus cuentas ya están vinculadas con éxito!", "exito");
+            mostrarEstado("¡Tus cuentas ya están vinculadas con éxito!", "success");
             return;
         }
 
-        statusDiv.style.display = 'block';
-        statusDiv.innerHTML = 'Sincronizando perfiles...';
+        // Mientras se hace el fetch, mostramos el mensaje con el botón de reiniciar disponible
+        mostrarEstado("Sincronizando perfiles en el servidor...");
 
         try {
             const response = await fetch(`${URL_DE_TU_RENDER}/api/vincular`, {
@@ -81,16 +69,14 @@ window.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('webhook_enviado', 'true');
                 window.location.reload(); 
             } else {
-                mostrarEstado("Hubo un error en el servidor. Prueba a reiniciar.");
+                mostrarEstado("Error en el servidor. Inténtalo de nuevo.");
             }
-        } catch (error) {
-            mostrarEstado("Error de conexión con el servidor.");
+        } catch (e) {
+            mostrarEstado("Error de conexión. Pulsa reiniciar.");
         }
     } 
-    // CASO B: Solo una cuenta conectada (Aquí es donde recuperamos el botón)
     else if (twitchToken || discordToken) {
-        const conectada = twitchToken ? "Twitch" : "Discord";
         const falta = twitchToken ? "Discord" : "Twitch";
-        mostrarEstado(`Has conectado ${conectada}. Ahora falta conectar ${falta}.`);
+        mostrarEstado(`Has conectado una cuenta. Ahora falta conectar ${falta}.`);
     }
 });
