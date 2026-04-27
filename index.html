@@ -2,94 +2,75 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vinculación de Cuentas</title>
     <style>
-        /* Reseteo global para evitar desbordamientos laterales */
-        * {
-            box-sizing: border-box;
+        /* BLOQUEO TOTAL DE ANCHO */
+        html, body {
+            width: 100vw;
+            height: 100vh;
             margin: 0;
             padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden; /* Prohibido el scroll lateral */
             background-color: #0f0f1a;
-            color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            width: 100%;
-            overflow-x: hidden;
+            /* Evita que el navegador reescale el texto por su cuenta */
             -webkit-text-size-adjust: 100%;
         }
 
-        /* Contenedor fluido: se adapta al móvil pero no crece de más en PC */
         .container {
             background-color: #1c1c2e;
-            padding: 30px 20px;
+            padding: 30px;
             border-radius: 16px;
             text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            width: 90%;
-            max-width: 380px;
-            margin: 20px auto;
+            /* Usamos vmin para asegurar que quepa en cualquier pantalla */
+            width: 90vw;
+            max-width: 360px;
+            z-index: 100;
         }
 
-        h1 { font-size: 1.6rem; margin-bottom: 12px; font-weight: 700; }
-        p { font-size: 0.95rem; color: #b0b0d0; margin-bottom: 30px; line-height: 1.5; }
+        h1 { font-size: 1.5rem; margin-bottom: 10px; color: #fff; }
+        p { font-size: 0.9rem; color: #b0b0d0; margin-bottom: 25px; }
 
         .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: block;
             width: 100%;
             padding: 15px;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-weight: 600;
-            font-size: 16px; /* Vital: 16px evita el zoom automático en iOS */
+            font-size: 16px; 
             cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
-            text-decoration: none;
             color: white;
+            text-decoration: none;
         }
-
-        .btn:active { transform: scale(0.98); }
 
         .btn-twitch { background-color: #9146ff; }
         .btn-discord { background-color: #5865f2; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* Mensajes de estado */
+        
         #status-message {
-            margin-top: 25px;
+            margin-top: 20px;
             padding: 15px;
-            border-radius: 10px;
-            font-size: 0.9rem;
+            border-radius: 8px;
             display: none;
+            font-size: 0.9rem;
             background: rgba(255,255,255,0.05);
-            line-height: 1.4;
         }
-
-        .success { border: 1px solid #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1) !important; }
-        .error { border: 1px solid #e74c3c; color: #e74c3c; background: rgba(231, 76, 60, 0.1) !important; }
+        .success { border: 1px solid #2ecc71; color: #2ecc71; }
     </style>
 </head>
 <body>
-
     <div class="container">
         <h1>Vincular Cuentas</h1>
-        <p>Sincroniza tus perfiles de Twitch y Discord para obtener tus beneficios automáticamente.</p>
-
-        <button id="btn-twitch" class="btn btn-twitch">Conectar con Twitch</button>
-        <button id="btn-discord" class="btn btn-discord">Conectar con Discord</button>
-
+        <p>Pulsa los botones para sincronizar tus perfiles.</p>
+        <button id="btn-twitch" class="btn btn-twitch">Twitch</button>
+        <button id="btn-discord" class="btn btn-discord">Discord</button>
         <div id="status-message"></div>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
