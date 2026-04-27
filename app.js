@@ -27,6 +27,9 @@ function resetearTodo() {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
+    // Llamamos a la ruta de ping
+    fetch('https://backend-vinculacion-8twr.onrender.com/ping').catch(() => {});
+    
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
